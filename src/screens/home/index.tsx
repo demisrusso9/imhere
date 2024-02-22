@@ -2,35 +2,41 @@ import { View, Text, TextInput, FlatList, Alert } from 'react-native'
 import { styles } from './styles'
 import { Participant } from '../../components/participant'
 import { Button } from '../../ui/Button'
+import { useState } from 'react'
+
+interface ParticipantsProps {
+  id: number
+  name: string
+}
 
 export function Home() {
-  const participants = [
-    { id: 1, name: 'Demis' },
-    { id: 2, name: 'Russo' },
-    { id: 3, name: 'Mendes' },
-    { id: 4, name: 'da' },
-    { id: 5, name: 'Silva' },
-    { id: 6, name: 'Junior' },
-    { id: 7, name: 'Dominique' },
-    { id: 8, name: 'Ithina' },
-    { id: 9, name: 'Oliveira' },
-    { id: 10, name: 'Jesus' }
-  ]
+  const [participants, setParticipants] = useState<ParticipantsProps[]>([])
+  const [participantName, setParticipantName] = useState('')
 
   function handleAddParticipant() {
-    if (participants.some(item => item.name === 'Jesus')) {
+    if (participants.some(item => item.name === participantName)) {
       return Alert.alert(
         'Participante já existe',
         'Já existe um participante na lista com esse nome.'
       )
     }
+
+    const newParticipant = {
+      id: participants.length + 1,
+      name: participantName
+    }
+
+    setParticipants(prevState => [...prevState, newParticipant])
+    setParticipantName('')
   }
 
-  function handleRemoveParticipant(name: string) {
+  function handleRemoveParticipant(id: number, name: string) {
     return Alert.alert('Remover', `Deseja remover o participante ${name}?`, [
       {
         text: 'Sim',
-        onPress: () => Alert.alert('Deletado')
+        onPress: () => {
+          setParticipants(prevState => prevState.filter(item => item.id !== id))
+        }
       },
       {
         text: 'Não',
@@ -50,6 +56,9 @@ export function Home() {
           placeholder='Nome do participante'
           placeholderTextColor={'#6B6B6B'}
           keyboardAppearance='dark'
+          value={participantName}
+          onChangeText={setParticipantName}
+          onSubmitEditing={handleAddParticipant}
         />
 
         <Button onPress={handleAddParticipant} variant='primary' symbol={'+'} />
@@ -62,7 +71,7 @@ export function Home() {
           <Participant
             key={item.id}
             name={item.name}
-            onRemove={() => handleRemoveParticipant(item.name)}
+            onRemove={() => handleRemoveParticipant(item.id, item.name)}
           />
         )}
         showsVerticalScrollIndicator={false}
