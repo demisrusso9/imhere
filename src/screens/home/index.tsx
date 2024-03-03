@@ -1,8 +1,16 @@
-import { View, Text, TextInput, FlatList, Alert } from 'react-native'
-import { styles } from './styles'
-import { Participant } from '../../components/participant'
-import { Button } from '../../ui/Button'
 import { useState } from 'react'
+import { FlatList, Alert, Keyboard } from 'react-native'
+import { Participant } from '@/components/Participant'
+import { Button } from '@/components/Button'
+
+import {
+  Container,
+  EventName,
+  EventDate,
+  Form,
+  Input,
+  ListEmptyList
+} from './styles'
 
 interface ParticipantsProps {
   id: number
@@ -14,6 +22,10 @@ export function Home() {
   const [participantName, setParticipantName] = useState('')
 
   function handleAddParticipant() {
+    if (participantName.trim() === '') {
+      return Alert.alert('Campo vazio', 'O campo de nome não pode ficar vazio.')
+    }
+
     if (participants.some(item => item.name === participantName)) {
       return Alert.alert(
         'Participante já existe',
@@ -28,6 +40,7 @@ export function Home() {
 
     setParticipants(prevState => [...prevState, newParticipant])
     setParticipantName('')
+    Keyboard.dismiss()
   }
 
   function handleRemoveParticipant(id: number, name: string) {
@@ -46,23 +59,23 @@ export function Home() {
   }
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.eventName}>Nome de Evento</Text>
-      <Text style={styles.eventDate}>Terça-feira, 20, de 2024</Text>
+    <Container>
+      <EventName>Nome de Evento</EventName>
+      <EventDate>Terça-feira, 20, de 2024</EventDate>
 
-      <View style={styles.form}>
-        <TextInput
-          style={styles.input}
+      <Form>
+        <Input
           placeholder='Nome do participante'
           placeholderTextColor={'#6B6B6B'}
           keyboardAppearance='dark'
+          enterKeyHint='done'
           value={participantName}
           onChangeText={setParticipantName}
           onSubmitEditing={handleAddParticipant}
         />
 
         <Button onPress={handleAddParticipant} variant='primary' symbol={'+'} />
-      </View>
+      </Form>
 
       <FlatList
         data={participants}
@@ -76,12 +89,12 @@ export function Home() {
         )}
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={() => (
-          <Text style={styles.listEmptyList}>
+          <ListEmptyList>
             Ninguém chegou no evento ainda? Adicione participantes a sua lista
             de presença.
-          </Text>
+          </ListEmptyList>
         )}
       />
-    </View>
+    </Container>
   )
 }

@@ -1,6 +1,5 @@
-import { View, Text } from 'react-native'
-import { styles } from './styles'
-import { Button } from '../../ui/Button'
+import { Button } from '../Button'
+import { Container, Name } from './styles'
 
 interface ParticipantProps {
   name: String
@@ -9,10 +8,10 @@ interface ParticipantProps {
 
 export function Participant({ name, onRemove }: ParticipantProps) {
   return (
-    <View style={styles.container}>
-      <Text style={styles.name}>{name}</Text>
+    <Container>
+      <Name>{name}</Name>
 
       <Button variant='secondary' symbol={'-'} onPress={onRemove} />
-    </View>
+    </Container>
   )
 }
