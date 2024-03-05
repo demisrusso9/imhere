@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { FlatList, Alert, Keyboard } from 'react-native'
 import { Participant } from '@/components/Participant'
 import { Button } from '@/components/Button'
@@ -11,8 +11,11 @@ import {
   Input,
   ListEmptyList
 } from './styles'
+import { participantCreate } from '@/storage/participant/participantCreate'
+import { participantGetAll } from '@/storage/participant/participantGetAll'
+import { participantRemove } from '@/storage/participant/participantRemove'
 
-interface ParticipantsProps {
+export interface ParticipantsProps {
   id: number
   name: string
 }
@@ -21,42 +24,66 @@ export function Home() {
   const [participants, setParticipants] = useState<ParticipantsProps[]>([])
   const [participantName, setParticipantName] = useState('')
 
-  function handleAddParticipant() {
+  async function handleAddParticipant() {
     if (participantName.trim() === '') {
       return Alert.alert('Campo vazio', 'O campo de nome não pode ficar vazio.')
     }
 
-    if (participants.some(item => item.name === participantName)) {
-      return Alert.alert(
-        'Participante já existe',
-        'Já existe um participante na lista com esse nome.'
-      )
-    }
-
-    const newParticipant = {
-      id: participants.length + 1,
-      name: participantName
-    }
-
-    setParticipants(prevState => [...prevState, newParticipant])
-    setParticipantName('')
-    Keyboard.dismiss()
-  }
-
-  function handleRemoveParticipant(id: number, name: string) {
-    return Alert.alert('Remover', `Deseja remover o participante ${name}?`, [
-      {
-        text: 'Sim',
-        onPress: () => {
-          setParticipants(prevState => prevState.filter(item => item.id !== id))
-        }
-      },
-      {
-        text: 'Não',
-        style: 'cancel'
+    try {
+      const newParticipant = {
+        id: participants.length + 1,
+        name: participantName
       }
-    ])
+
+      await participantCreate(newParticipant)
+      fetchParticipants()
+
+      setParticipants(prevState => [...prevState, newParticipant])
+    } catch (error) {
+      if (error instanceof Error) {
+        return Alert.alert('Participante já existe', error.message)
+      }
+    } finally {
+      setParticipantName('')
+      Keyboard.dismiss()
+    }
   }
+
+  function handleRemoveParticipant(person: ParticipantsProps) {
+    return Alert.alert(
+      'Remover',
+      `Deseja remover o participante ${person.name}?`,
+      [
+        { text: 'Não', style: 'cancel' },
+        { text: 'Sim', onPress: () => removeParticipant(person) }
+      ]
+    )
+  }
+
+  async function removeParticipant(person: ParticipantsProps) {
+    try {
+      await participantRemove(person)
+
+      setParticipants(prevState =>
+        prevState.filter(item => item.id !== person.id)
+      )
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
+  async function fetchParticipants() {
+    try {
+      const participants = await participantGetAll()
+      setParticipants(participants)
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
+  useEffect(() => {
+    fetchParticipants()
+  }, [])
 
   return (
     <Container>
@@ -84,7 +111,7 @@ export function Home() {
           <Participant
             key={item.id}
             name={item.name}
-            onRemove={() => handleRemoveParticipant(item.id, item.name)}
+            onRemove={() => handleRemoveParticipant(item)}
           />
         )}
         showsVerticalScrollIndicator={false}
